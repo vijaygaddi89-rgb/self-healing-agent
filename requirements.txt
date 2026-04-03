@@ -1,0 +1,11 @@
+langchain
+langgraph
+langchain-anthropic
+anthropic
+python-dotenv
+pydantic
+fastapi
+uvicorn
+docker
+pytest
+rich
