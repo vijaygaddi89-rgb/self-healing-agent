@@ -26,6 +26,7 @@ def run_agent(task: str):
     }
 
     result = agent.invoke(initial_state)
+    console.print(f"[yellow]Iterations used: {result['iterations']}[/yellow]")
 
     if result["status"] == "success":
         console.print(Panel("[bold green]✓ Code generated and verified![/bold green]", title="Result"))
