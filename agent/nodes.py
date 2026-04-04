@@ -53,28 +53,28 @@ def execute_code_node(state: AgentState) -> AgentState:
 
     code = state["generated_code"]
 
-    with tempfile.NamedTemporaryFile(
-        mode="w",
-        suffix=".py",
-        delete=False
-    ) as f:
-        f.write(code)
-        tmp_path = f.name
-
     try:
         result = subprocess.run(
-            ["python", tmp_path],
+            [
+                "docker", "run",
+                "--rm",
+                "-i",
+                "--network", "none",
+                "--memory", "128m",
+                "--cpus", "0.5",
+                "self-healing-sandbox",
+                "python", "-"
+            ],
+            input=code,
             capture_output=True,
             text=True,
             timeout=30
         )
-        output = result.stdout
-        error = result.stderr
 
         if result.returncode == 0:
             return {
                 **state,
-                "execution_output": output,
+                "execution_output": result.stdout,
                 "error_message": None,
                 "status": "success",
                 "final_code": code
@@ -82,10 +82,11 @@ def execute_code_node(state: AgentState) -> AgentState:
         else:
             return {
                 **state,
-                "execution_output": output,
-                "error_message": error,
+                "execution_output": result.stdout,
+                "error_message": result.stderr,
                 "status": "running"
             }
+
     except subprocess.TimeoutExpired:
         return {
             **state,
@@ -93,8 +94,6 @@ def execute_code_node(state: AgentState) -> AgentState:
             "error_message": "Execution timed out after 30 seconds.",
             "status": "running"
         }
-    finally:
-        os.unlink(tmp_path)
 
 
 def analyze_error_node(state: AgentState) -> AgentState:
